@@ -10,5 +10,3 @@ Thumbs.db
 # Ebiten/Go cache
 *.log
 
-# フォントや大きなバイナリはバージョン管理しない
-assets/NotoSansJP-Regular.ttf 
