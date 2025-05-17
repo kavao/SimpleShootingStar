@@ -1,0 +1,14 @@
+# Go build artifacts
+*.exe
+*.out
+*.test
+
+# OS/Editor files
+.DS_Store
+Thumbs.db
+
+# Ebiten/Go cache
+*.log
+
+# フォントや大きなバイナリはバージョン管理しない
+assets/NotoSansJP-Regular.ttf 
