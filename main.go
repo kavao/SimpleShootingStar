@@ -1,11 +1,15 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"image/color"
+	"log"
 	"math"
 	"math/rand"
 	"os"
+
+	"SimpleShootingStar/audio"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -71,13 +75,13 @@ type Enemy struct {
 
 // Wave は敵の出現パターンを表す構造体
 type Wave struct {
-	enemyType     int
-	x             int
-	delay         int
-	shootsBullet  bool
-	bulletType    int
-	speed         float64 // 追加
-	turnDirection int     // 追加（1:右, -1:左, 0:デフォルト右）
+	EnemyType     int     `json:"enemyType"`
+	X             int     `json:"x"`
+	Delay         int     `json:"delay"`
+	ShootsBullet  bool    `json:"shootsBullet"`
+	BulletType    int     `json:"bulletType"`
+	Speed         float64 `json:"speed"`
+	TurnDirection int     `json:"turnDirection"`
 }
 
 // Particle はパーティクルの状態を保持する構造体
@@ -92,71 +96,31 @@ type Particle struct {
 
 // Stage はステージの情報を保持する構造体
 type Stage struct {
-	Name  string
-	Waves []Wave
+	Name  string `json:"name"`
+	Waves []Wave `json:"waves"`
 }
 
-var stages = []Stage{
-	{
-		Name: "Stage 1: 基本編",
-		Waves: []Wave{
-			{enemyType: EnemyTypeStraight, x: 100, delay: 0, shootsBullet: false, bulletType: 0},
-			{enemyType: EnemyTypeStraight, x: 320, delay: 30, shootsBullet: true, bulletType: 0}, // 主人公狙い
-			{enemyType: EnemyTypeStraight, x: 540, delay: 30, shootsBullet: false, bulletType: 0},
-			{enemyType: EnemyTypeSine, x: 200, delay: 60, shootsBullet: true, bulletType: 1}, // 真下
-			{enemyType: EnemyTypeSine, x: 440, delay: 30, shootsBullet: false, bulletType: 0},
-		},
-	},
-	{
-		Name: "Stage 2: 波状攻撃",
-		Waves: []Wave{
-			{enemyType: EnemyTypeSine, x: 100, delay: 0, shootsBullet: false, bulletType: 0},
-			{enemyType: EnemyTypeSine, x: 320, delay: 30, shootsBullet: false, bulletType: 0},
-			{enemyType: EnemyTypeSine, x: 540, delay: 30, shootsBullet: false, bulletType: 0},
-			{enemyType: EnemyTypeSpecial, x: 200, delay: 60, shootsBullet: true, bulletType: 0},
-			{enemyType: EnemyTypeSpecial, x: 440, delay: 30, shootsBullet: false, bulletType: 0, turnDirection: -1},
-		},
-	},
-	{
-		Name: "Stage 3: 特殊攻撃",
-		Waves: []Wave{
-			{enemyType: EnemyTypeSpecial, x: 100, delay: 0, shootsBullet: false, bulletType: 0, speed: 2.0, turnDirection: 1},
-			{enemyType: EnemyTypeSpecial, x: 320, delay: 40, shootsBullet: false, bulletType: 0, speed: 4.0, turnDirection: 1},  // 高速右
-			{enemyType: EnemyTypeSpecial, x: 540, delay: 40, shootsBullet: false, bulletType: 0, speed: 2.0, turnDirection: -1}, // 左曲がり
-			{enemyType: EnemyTypeStraight, x: 200, delay: 60, shootsBullet: true, bulletType: 0, speed: 2.0, turnDirection: 0},
-			{enemyType: EnemyTypeSine, x: 440, delay: 30, shootsBullet: false, bulletType: 0, speed: 2.0, turnDirection: 0},
-			{enemyType: EnemyTypeSpecial, x: 320, delay: 30, shootsBullet: false, bulletType: 0, speed: 4.0, turnDirection: -1}, // 高速左
-		},
-	},
-	{
-		Name: "Stage 4: 複合攻撃",
-		Waves: []Wave{
-			{enemyType: EnemyTypeStraight, x: 100, delay: 0, shootsBullet: false, bulletType: 0},
-			{enemyType: EnemyTypeSine, x: 320, delay: 30, shootsBullet: false, bulletType: 0},
-			{enemyType: EnemyTypeSpecial, x: 540, delay: 30, shootsBullet: false, bulletType: 0, turnDirection: -1},
-			{enemyType: EnemyTypeStraight, x: 200, delay: 60, shootsBullet: true, bulletType: 0},
-			{enemyType: EnemyTypeSine, x: 440, delay: 30, shootsBullet: false, bulletType: 0},
-			{enemyType: EnemyTypeSpecial, x: 320, delay: 30, shootsBullet: false, bulletType: 0},
-			{enemyType: EnemyTypeStraight, x: 540, delay: 30, shootsBullet: false, bulletType: 0},
-			{enemyType: EnemyTypeSine, x: 100, delay: 30, shootsBullet: false, bulletType: 0},
-		},
-	},
-	{
-		Name: "Stage 5: 最終決戦",
-		Waves: []Wave{
-			{enemyType: EnemyTypeSpecial, x: 100, delay: 0, shootsBullet: false, bulletType: 0},
-			{enemyType: EnemyTypeSpecial, x: 320, delay: 30, shootsBullet: false, bulletType: 0},
-			{enemyType: EnemyTypeSpecial, x: 540, delay: 30, shootsBullet: false, bulletType: 0, turnDirection: -1},
-			{enemyType: EnemyTypeSpecial, x: 320, delay: 30, shootsBullet: false, bulletType: 0, turnDirection: -1},
-			{enemyType: EnemyTypeSine, x: 100, delay: 60, shootsBullet: true, bulletType: 0},
-			{enemyType: EnemyTypeSine, x: 320, delay: 30, shootsBullet: false, bulletType: 0},
-			{enemyType: EnemyTypeSine, x: 540, delay: 30, shootsBullet: false, bulletType: 0},
-			{enemyType: EnemyTypeStraight, x: 200, delay: 60, shootsBullet: true, bulletType: 0},
-			{enemyType: EnemyTypeStraight, x: 320, delay: 30, shootsBullet: false, bulletType: 0},
-			{enemyType: EnemyTypeStraight, x: 440, delay: 30, shootsBullet: false, bulletType: 0},
-			{enemyType: EnemyTypeSpecial, x: 320, delay: 60, shootsBullet: false, bulletType: 0},
-		},
-	},
+// StageData はJSONファイルから読み込むステージデータの構造体
+type StageData struct {
+	Stages []Stage `json:"stages"`
+}
+
+var stages []Stage
+
+// loadStages はJSONファイルからステージ情報を読み込みます
+func loadStages() error {
+	file, err := os.ReadFile("stage/stages.json")
+	if err != nil {
+		return fmt.Errorf("ステージファイルの読み込みに失敗: %v", err)
+	}
+
+	var stageData StageData
+	if err := json.Unmarshal(file, &stageData); err != nil {
+		return fmt.Errorf("JSONのパースに失敗: %v", err)
+	}
+
+	stages = stageData.Stages
+	return nil
 }
 
 // Game はゲームの状態を保持する構造体です
@@ -205,6 +169,11 @@ func NewGame() *Game {
 			length: 8 + rand.Float64()*8,
 			color:  c,
 		}
+	}
+
+	// 効果音システムの初期化
+	if err := audio.Initialize(); err != nil {
+		log.Fatal(err)
 	}
 
 	return &Game{
@@ -339,12 +308,12 @@ func (g *Game) Update() error {
 			// 累積delay方式
 			totalDelay := 0
 			for i := 0; i <= g.currentSpawn; i++ {
-				totalDelay += g.waves[i].delay
+				totalDelay += g.waves[i].Delay
 			}
 			if g.waveTimer >= totalDelay {
 				wave := g.waves[g.currentSpawn]
 				hp := 1
-				switch wave.enemyType {
+				switch wave.EnemyType {
 				case EnemyTypeStraight:
 					hp = 2
 				case EnemyTypeSine:
@@ -352,24 +321,24 @@ func (g *Game) Update() error {
 				case EnemyTypeSpecial:
 					hp = 4
 				}
-				speed := wave.speed
+				speed := wave.Speed
 				if speed == 0 {
 					speed = 2.0 // デフォルト
 				}
-				turnDir := wave.turnDirection
+				turnDir := wave.TurnDirection
 				if turnDir == 0 {
 					turnDir = 1 // デフォルト右
 				}
 				enemy := Enemy{
-					x:              float64(wave.x),
+					x:              float64(wave.X),
 					y:              -20,
 					speed:          speed,
-					enemyType:      wave.enemyType,
+					enemyType:      wave.EnemyType,
 					time:           0,
 					phase:          0,
 					hp:             hp,
-					shootsBullet:   wave.shootsBullet,
-					bulletType:     wave.bulletType,
+					shootsBullet:   wave.ShootsBullet,
+					bulletType:     wave.BulletType,
 					bulletCooldown: 60 + rand.Intn(60), // 1〜2秒ごとに発射
 					turnDirection:  turnDir,
 				}
@@ -468,6 +437,8 @@ func (g *Game) Update() error {
 				g.bullets = append(g.bullets, bullet)
 			}
 			g.shootCooldown = 5
+			// 効果音を再生
+			audio.GetInstance().Play("shoot")
 		}
 		if g.shootCooldown > 0 {
 			g.shootCooldown--
@@ -654,7 +625,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	switch g.gameState {
 	case GameStateTitle:
 		// タイトル画面
-		titleText := "SPACE SHOOTER"
+		titleText := "SIMPLE SHOOTING STAR"
 		startText := "Press SPACE to Start"
 		highScoreText := fmt.Sprintf("High Score: %d", g.highScore)
 
@@ -805,6 +776,11 @@ func loadFont() font.Face {
 }
 
 func main() {
+	// ステージ情報の読み込み
+	if err := loadStages(); err != nil {
+		panic(err)
+	}
+
 	gameFont = loadFont()
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("Simple Game")

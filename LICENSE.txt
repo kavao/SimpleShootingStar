@@ -1,3 +1,11 @@
+[音楽]
+
+
+OTO_
+効果音素材：OtoLogic（https://otologic.jp/）
+ライセンス：CC BY 4.0（https://creativecommons.org/licenses/by/4.0/）
+
+[フォント]
 Copyright 2022 The Noto Project Authors (https://github.com/notofonts/noto-cjk)
 
 This Font Software is licensed under the SIL Open Font License, Version 1.1.

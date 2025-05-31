@@ -3,61 +3,61 @@
         {
             "name": "Stage 1: 基本編",
             "waves": [
-                { "enemyType": 0, "x": 100, "delay": 0 },
-                { "enemyType": 0, "x": 320, "delay": 30 },
-                { "enemyType": 0, "x": 540, "delay": 30 },
-                { "enemyType": 1, "x": 200, "delay": 60 },
-                { "enemyType": 1, "x": 440, "delay": 30 }
+                { "enemyType": 0, "x": 100, "delay": 0, "shootsBullet": false, "bulletType": 0, "speed": 2.0, "turnDirection": 1 },
+                { "enemyType": 0, "x": 320, "delay": 30, "shootsBullet": true, "bulletType": 0, "speed": 2.0, "turnDirection": 1 },
+                { "enemyType": 0, "x": 540, "delay": 30, "shootsBullet": false, "bulletType": 0, "speed": 2.0, "turnDirection": 1 },
+                { "enemyType": 1, "x": 200, "delay": 60, "shootsBullet": true, "bulletType": 1, "speed": 2.0, "turnDirection": 1 },
+                { "enemyType": 1, "x": 440, "delay": 30, "shootsBullet": false, "bulletType": 0, "speed": 2.0, "turnDirection": 1 }
             ]
         },
         {
             "name": "Stage 2: 波状攻撃",
             "waves": [
-                { "enemyType": 1, "x": 100, "delay": 0 },
-                { "enemyType": 1, "x": 320, "delay": 30 },
-                { "enemyType": 1, "x": 540, "delay": 30 },
-                { "enemyType": 2, "x": 200, "delay": 60 },
-                { "enemyType": 2, "x": 440, "delay": 30 }
+                { "enemyType": 1, "x": 100, "delay": 0, "shootsBullet": false, "bulletType": 0, "speed": 2.0, "turnDirection": 1 },
+                { "enemyType": 1, "x": 320, "delay": 30, "shootsBullet": false, "bulletType": 0, "speed": 2.0, "turnDirection": 1 },
+                { "enemyType": 1, "x": 540, "delay": 30, "shootsBullet": false, "bulletType": 0, "speed": 2.0, "turnDirection": 1 },
+                { "enemyType": 2, "x": 200, "delay": 60, "shootsBullet": true, "bulletType": 0, "speed": 2.0, "turnDirection": 1 },
+                { "enemyType": 2, "x": 440, "delay": 30, "shootsBullet": false, "bulletType": 0, "speed": 2.0, "turnDirection": -1 }
             ]
         },
         {
             "name": "Stage 3: 特殊攻撃",
             "waves": [
-                { "enemyType": 2, "x": 100, "delay": 0 },
-                { "enemyType": 2, "x": 320, "delay": 40 },
-                { "enemyType": 2, "x": 540, "delay": 40 },
-                { "enemyType": 0, "x": 200, "delay": 60 },
-                { "enemyType": 1, "x": 440, "delay": 30 },
-                { "enemyType": 2, "x": 320, "delay": 30 }
+                { "enemyType": 2, "x": 100, "delay": 0, "shootsBullet": false, "bulletType": 0, "speed": 2.0, "turnDirection": 1 },
+                { "enemyType": 2, "x": 320, "delay": 40, "shootsBullet": false, "bulletType": 0, "speed": 4.0, "turnDirection": 1 },
+                { "enemyType": 2, "x": 540, "delay": 40, "shootsBullet": false, "bulletType": 0, "speed": 2.0, "turnDirection": -1 },
+                { "enemyType": 0, "x": 200, "delay": 60, "shootsBullet": true, "bulletType": 0, "speed": 2.0, "turnDirection": 0 },
+                { "enemyType": 1, "x": 440, "delay": 30, "shootsBullet": false, "bulletType": 0, "speed": 2.0, "turnDirection": 0 },
+                { "enemyType": 2, "x": 320, "delay": 30, "shootsBullet": false, "bulletType": 0, "speed": 4.0, "turnDirection": -1 }
             ]
         },
         {
             "name": "Stage 4: 複合攻撃",
             "waves": [
-                { "enemyType": 0, "x": 100, "delay": 0 },
-                { "enemyType": 1, "x": 320, "delay": 30 },
-                { "enemyType": 2, "x": 540, "delay": 30 },
-                { "enemyType": 0, "x": 200, "delay": 60 },
-                { "enemyType": 1, "x": 440, "delay": 30 },
-                { "enemyType": 2, "x": 320, "delay": 30 },
-                { "enemyType": 0, "x": 540, "delay": 30 },
-                { "enemyType": 1, "x": 100, "delay": 30 }
+                { "enemyType": 0, "x": 100, "delay": 0, "shootsBullet": false, "bulletType": 0, "speed": 2.0, "turnDirection": 1 },
+                { "enemyType": 1, "x": 320, "delay": 30, "shootsBullet": false, "bulletType": 0, "speed": 2.0, "turnDirection": 1 },
+                { "enemyType": 2, "x": 540, "delay": 30, "shootsBullet": false, "bulletType": 0, "speed": 2.0, "turnDirection": -1 },
+                { "enemyType": 0, "x": 200, "delay": 60, "shootsBullet": true, "bulletType": 0, "speed": 2.0, "turnDirection": 1 },
+                { "enemyType": 1, "x": 440, "delay": 30, "shootsBullet": false, "bulletType": 0, "speed": 2.0, "turnDirection": 1 },
+                { "enemyType": 2, "x": 320, "delay": 30, "shootsBullet": false, "bulletType": 0, "speed": 2.0, "turnDirection": 1 },
+                { "enemyType": 0, "x": 540, "delay": 30, "shootsBullet": false, "bulletType": 0, "speed": 2.0, "turnDirection": 1 },
+                { "enemyType": 1, "x": 100, "delay": 30, "shootsBullet": false, "bulletType": 0, "speed": 2.0, "turnDirection": 1 }
             ]
         },
         {
             "name": "Stage 5: 最終決戦",
             "waves": [
-                { "enemyType": 2, "x": 100, "delay": 0 },
-                { "enemyType": 2, "x": 320, "delay": 30 },
-                { "enemyType": 2, "x": 540, "delay": 30 },
-                { "enemyType": 2, "x": 320, "delay": 30 },
-                { "enemyType": 1, "x": 100, "delay": 60 },
-                { "enemyType": 1, "x": 320, "delay": 30 },
-                { "enemyType": 1, "x": 540, "delay": 30 },
-                { "enemyType": 0, "x": 200, "delay": 60 },
-                { "enemyType": 0, "x": 320, "delay": 30 },
-                { "enemyType": 0, "x": 440, "delay": 30 },
-                { "enemyType": 2, "x": 320, "delay": 60 }
+                { "enemyType": 2, "x": 100, "delay": 0, "shootsBullet": false, "bulletType": 0, "speed": 2.0, "turnDirection": 1 },
+                { "enemyType": 2, "x": 320, "delay": 30, "shootsBullet": false, "bulletType": 0, "speed": 2.0, "turnDirection": 1 },
+                { "enemyType": 2, "x": 540, "delay": 30, "shootsBullet": false, "bulletType": 0, "speed": 2.0, "turnDirection": -1 },
+                { "enemyType": 2, "x": 320, "delay": 30, "shootsBullet": false, "bulletType": 0, "speed": 2.0, "turnDirection": -1 },
+                { "enemyType": 1, "x": 100, "delay": 60, "shootsBullet": true, "bulletType": 0, "speed": 2.0, "turnDirection": 1 },
+                { "enemyType": 1, "x": 320, "delay": 30, "shootsBullet": false, "bulletType": 0, "speed": 2.0, "turnDirection": 1 },
+                { "enemyType": 1, "x": 540, "delay": 30, "shootsBullet": false, "bulletType": 0, "speed": 2.0, "turnDirection": 1 },
+                { "enemyType": 0, "x": 200, "delay": 60, "shootsBullet": true, "bulletType": 0, "speed": 2.0, "turnDirection": 1 },
+                { "enemyType": 0, "x": 320, "delay": 30, "shootsBullet": false, "bulletType": 0, "speed": 2.0, "turnDirection": 1 },
+                { "enemyType": 0, "x": 440, "delay": 30, "shootsBullet": false, "bulletType": 0, "speed": 2.0, "turnDirection": 1 },
+                { "enemyType": 2, "x": 320, "delay": 60, "shootsBullet": false, "bulletType": 0, "speed": 2.0, "turnDirection": 1 }
             ]
         }
     ]
