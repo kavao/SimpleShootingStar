@@ -51,6 +51,7 @@ const (
 	EnemyTypeStraight = iota // まっすぐ進む敵
 	EnemyTypeSine            // サインカーブで動く敵
 	EnemyTypeSpecial         // 特殊な動きをする敵
+	EnemyTypeBoss            // ボス敵
 )
 
 // EnemyBullet構造体を追加
@@ -71,6 +72,10 @@ type Enemy struct {
 	bulletType     int     // 0:主人公狙い, 1:真下, 2:斜め
 	bulletCooldown int     // 弾発射クールダウン
 	turnDirection  int     // 追加
+	// ボス専用フィールド
+	bossState     int // ボスの行動状態（0:移動, 1:攻撃準備, 2:攻撃中, 3:休憩）
+	bossTimer     int // ボス用タイマー
+	moveDirection int // 移動方向（-1:左, 1:右）
 }
 
 // Wave は敵の出現パターンを表す構造体
@@ -320,6 +325,8 @@ func (g *Game) Update() error {
 					hp = 3
 				case EnemyTypeSpecial:
 					hp = 4
+				case EnemyTypeBoss:
+					hp = 50 // ボスは高い耐久力
 				}
 				speed := wave.Speed
 				if speed == 0 {
@@ -341,6 +348,10 @@ func (g *Game) Update() error {
 					bulletType:     wave.BulletType,
 					bulletCooldown: 60 + rand.Intn(60), // 1〜2秒ごとに発射
 					turnDirection:  turnDir,
+					// ボス専用の初期化
+					bossState:     0, // 移動状態から開始
+					bossTimer:     0,
+					moveDirection: 1, // 右向きから開始
 				}
 				g.enemies = append(g.enemies, enemy)
 				g.currentSpawn++
@@ -373,6 +384,69 @@ func (g *Game) Update() error {
 					}
 				case 2: // 下降
 					e.y += e.speed
+				}
+			case EnemyTypeBoss:
+				// ボスの行動パターン
+				e.bossTimer++
+
+				switch e.bossState {
+				case 0: // 移動状態
+					// 画面上部で一定位置に移動
+					if e.y < 80 {
+						e.y += e.speed
+					} else {
+						// 左右に移動
+						e.x += e.speed * float64(e.moveDirection)
+
+						// 端に到達したら方向転換
+						if e.x <= 50 {
+							e.moveDirection = 1
+						} else if e.x >= screenWidth-90 {
+							e.moveDirection = -1
+						}
+
+						// 一定時間移動したら攻撃準備へ
+						if e.bossTimer > 120 { // 2秒間移動
+							e.bossState = 1
+							e.bossTimer = 0
+						}
+					}
+				case 1: // 攻撃準備（前振り）
+					// 攻撃の前振りで一時停止
+					if e.bossTimer > 60 { // 1秒間前振り
+						e.bossState = 2
+						e.bossTimer = 0
+					}
+				case 2: // 攻撃中
+					// 大量の弾を発射
+					if e.bossTimer%8 == 0 && e.bossTimer < 80 { // 10回連続発射
+						// 5way弾幕
+						for j := -2; j <= 2; j++ {
+							angle := float64(j) * 0.3 // 真下から左右に扇状
+							speed := 3.0
+							vx := math.Sin(angle) * speed
+							vy := math.Cos(angle) * speed
+							g.enemyBullets = append(g.enemyBullets, EnemyBullet{
+								x: e.x + 20, y: e.y + 30, vx: vx, vy: vy,
+							})
+						}
+						// 攻撃エフェクト
+						g.particles = append(g.particles, Particle{
+							x: e.x + 20, y: e.y + 30, vx: 0, vy: 4.0,
+							size: 100, alpha: 1.0, lifetime: 8, ptype: 1,
+						})
+					}
+
+					if e.bossTimer > 80 { // 攻撃終了
+						e.bossState = 3
+						e.bossTimer = 0
+					}
+				case 3: // 休憩状態
+					// 次の攻撃まで休憩
+					if e.bossTimer > 90 { // 1.5秒休憩
+						e.bossState = 0
+						e.bossTimer = 0
+					}
 				}
 			}
 
@@ -449,12 +523,25 @@ func (g *Game) Update() error {
 		for _, b := range g.bullets {
 			hit := false
 			for i := range g.enemies {
-				if b.x < g.enemies[i].x+20 && b.x+4 > g.enemies[i].x &&
-					b.y < g.enemies[i].y+20 && b.y+8 > g.enemies[i].y {
+				// 敵のサイズを考慮した当たり判定
+				var enemyWidth, enemyHeight float64 = 20, 20
+				if g.enemies[i].enemyType == EnemyTypeBoss {
+					enemyWidth, enemyHeight = 60, 40
+				}
+
+				if b.x < g.enemies[i].x+enemyWidth && b.x+4 > g.enemies[i].x &&
+					b.y < g.enemies[i].y+enemyHeight && b.y+8 > g.enemies[i].y {
 					hit = true
 					g.enemies[i].hp--
 					if g.enemies[i].hp <= 0 {
-						g.score += 100
+						// 敵の種類に応じたスコア加算
+						switch g.enemies[i].enemyType {
+						case EnemyTypeBoss:
+							g.score += 1000 // ボスは高得点
+						default:
+							g.score += 100
+						}
+
 						// 敵の種類に応じた色で爆発エフェクト
 						var explosionColor color.RGBA
 						switch g.enemies[i].enemyType {
@@ -464,6 +551,8 @@ func (g *Game) Update() error {
 							explosionColor = color.RGBA{255, 165, 0, 255}
 						case EnemyTypeSpecial:
 							explosionColor = color.RGBA{255, 0, 255, 255}
+						case EnemyTypeBoss:
+							explosionColor = color.RGBA{255, 215, 0, 255} // 金色
 						}
 						g.createExplosion(g.enemies[i].x+10, g.enemies[i].y+10, explosionColor)
 						g.enemies = append(g.enemies[:i], g.enemies[i+1:]...)
@@ -502,8 +591,14 @@ func (g *Game) Update() error {
 
 		// プレイヤーと敵の当たり判定
 		for _, e := range g.enemies {
-			if g.playerX < e.x+20 && g.playerX+20 > e.x &&
-				g.playerY < e.y+20 && g.playerY+24 > e.y {
+			// 敵のサイズを考慮した当たり判定
+			var enemyWidth, enemyHeight float64 = 20, 20
+			if e.enemyType == EnemyTypeBoss {
+				enemyWidth, enemyHeight = 60, 40
+			}
+
+			if g.playerX < e.x+enemyWidth && g.playerX+20 > e.x &&
+				g.playerY < e.y+enemyHeight && g.playerY+24 > e.y {
 				if g.score > g.highScore {
 					g.highScore = g.score
 				}
@@ -643,6 +738,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		// 敵を描画
 		for _, e := range g.enemies {
 			var enemyColor color.RGBA
+			var enemyWidth, enemyHeight float64 = 20, 20
+
 			switch e.enemyType {
 			case EnemyTypeStraight:
 				enemyColor = color.RGBA{255, 0, 0, 255}
@@ -650,11 +747,26 @@ func (g *Game) Draw(screen *ebiten.Image) {
 				enemyColor = color.RGBA{255, 165, 0, 255}
 			case EnemyTypeSpecial:
 				enemyColor = color.RGBA{255, 0, 255, 255}
+			case EnemyTypeBoss:
+				enemyColor = color.RGBA{200, 0, 0, 255} // ダークレッド
+				enemyWidth, enemyHeight = 60, 40        // ボスは大きく
+
+				// ボスの攻撃準備状態で点滅効果
+				if e.bossState == 1 && e.bossTimer%10 < 5 {
+					enemyColor = color.RGBA{255, 255, 255, 255}
+				}
 			}
-			ebitenutil.DrawRect(screen, e.x, e.y, 20, 20, enemyColor)
+
+			ebitenutil.DrawRect(screen, e.x, e.y, enemyWidth, enemyHeight, enemyColor)
+
 			// HPバーを表示
-			hpBarWidth := float64(e.hp) * 5
-			ebitenutil.DrawRect(screen, e.x, e.y-5, hpBarWidth, 2, color.RGBA{0, 255, 0, 255})
+			var hpBarWidth float64
+			if e.enemyType == EnemyTypeBoss {
+				hpBarWidth = float64(e.hp) * 1.0 // ボス用のHPバー
+			} else {
+				hpBarWidth = float64(e.hp) * 5
+			}
+			ebitenutil.DrawRect(screen, e.x, e.y-8, hpBarWidth, 4, color.RGBA{0, 255, 0, 255})
 		}
 
 		// 自機を描画
@@ -693,6 +805,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		// 敵を描画
 		for _, e := range g.enemies {
 			var enemyColor color.RGBA
+			var enemyWidth, enemyHeight float64 = 20, 20
+
 			switch e.enemyType {
 			case EnemyTypeStraight:
 				enemyColor = color.RGBA{255, 0, 0, 255}
@@ -700,11 +814,26 @@ func (g *Game) Draw(screen *ebiten.Image) {
 				enemyColor = color.RGBA{255, 165, 0, 255}
 			case EnemyTypeSpecial:
 				enemyColor = color.RGBA{255, 0, 255, 255}
+			case EnemyTypeBoss:
+				enemyColor = color.RGBA{200, 0, 0, 255} // ダークレッド
+				enemyWidth, enemyHeight = 60, 40        // ボスは大きく
+
+				// ボスの攻撃準備状態で点滅効果
+				if e.bossState == 1 && e.bossTimer%10 < 5 {
+					enemyColor = color.RGBA{255, 255, 255, 255}
+				}
 			}
-			ebitenutil.DrawRect(screen, e.x, e.y, 20, 20, enemyColor)
+
+			ebitenutil.DrawRect(screen, e.x, e.y, enemyWidth, enemyHeight, enemyColor)
+
 			// HPバーを表示
-			hpBarWidth := float64(e.hp) * 5
-			ebitenutil.DrawRect(screen, e.x, e.y-5, hpBarWidth, 2, color.RGBA{0, 255, 0, 255})
+			var hpBarWidth float64
+			if e.enemyType == EnemyTypeBoss {
+				hpBarWidth = float64(e.hp) * 1.0 // ボス用のHPバー
+			} else {
+				hpBarWidth = float64(e.hp) * 5
+			}
+			ebitenutil.DrawRect(screen, e.x, e.y-8, hpBarWidth, 4, color.RGBA{0, 255, 0, 255})
 		}
 
 		// 弾を描画
